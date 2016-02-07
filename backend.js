@@ -47,7 +47,9 @@ Backend.prototype.getInfo = function(callback) {
 // Wrapper around backend.getTile that implements a "locking" cache.
 Backend.prototype.getTile = function(z, x, y, callback) {
     if (!this._source) return callback(new Error('Tilesource not loaded'));
-
+    if (z < 0 || x < 0 || y < 0 || x >= Math.pow(2,z) || y >= Math.pow(2,z)) {
+        return callback(new Error('Tile does not exist'));
+    }
     var backend = this;
     var source = backend._source;
     var now = +new Date;
@@ -93,7 +95,7 @@ Backend.prototype.getTile = function(z, x, y, callback) {
         if (body instanceof mapnik.VectorTile) {
             size = body._srcbytes;
             headers = head || {};
-            return makevtile(null, body);
+            return makevtile(body);
         }
 
         var compression = false;
@@ -109,7 +111,7 @@ Backend.prototype.getTile = function(z, x, y, callback) {
         } else if (compression) {
             size = body.length;
             headers = head || {};
-            return makevtile(null, body, 'pbf');
+            return makevtile(body, 'pbf');
         // Image sources do not allow overzooming (yet).
         } else if (bz < z && headers['x-vector-backend-object'] !== 'fillzoom') {
             headers['x-vector-backend-object'] = 'empty';
@@ -117,13 +119,11 @@ Backend.prototype.getTile = function(z, x, y, callback) {
         } else {
             size = body.length;
             headers = head || {};
-            return makevtile(null, body);
+            return makevtile(body);
         }
     });
 
-    function makevtile(err, data, type) {
-        if (err && err.message !== 'Tile does not exist') return callback(err);
-
+    function makevtile(data, type) {
         // If no last modified is provided, use epoch.
         headers['Last-Modified'] = new Date(headers['Last-Modified'] || 0).toUTCString();
 
