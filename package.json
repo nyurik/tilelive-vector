@@ -2,7 +2,7 @@
   "name": "tilelive-vector",
   "version": "3.7.1",
   "main": "./index.js",
-  "description": "Vector tile => raster tile backend for tilelive",
+  "description": "Vector tile ➡ raster tile backend for tilelive",
   "repository": {
     "type": "git",
     "url": "git://github.com/mapbox/tilelive-vector.git"
